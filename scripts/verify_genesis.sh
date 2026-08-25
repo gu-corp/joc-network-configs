@@ -2,7 +2,7 @@
 # Verify that the checked-in genesis.json reproduces the genesis block the live
 # network is actually running, and that genesis_details.yaml agrees with both.
 #
-# Usage: scripts/verify_genesis.sh [joc|joct|all]   (default: all)
+# Usage: scripts/verify_genesis.sh [joc|joct|sandbox1|all]   (default: all)
 #
 # Requires: docker (to run geth init), curl, jq.
 set -euo pipefail
@@ -114,9 +114,9 @@ verify() {
 }
 
 case "$TARGET" in
-  all) verify joc; echo; verify joct ;;
-  joc|joct) verify "$TARGET" ;;
-  *) echo "usage: $0 [joc|joct|all]" >&2; exit 2 ;;
+  all) verify joc; echo; verify joct; echo; verify sandbox1 ;;
+  joc|joct|sandbox1) verify "$TARGET" ;;
+  *) echo "usage: $0 [joc|joct|sandbox1|all]" >&2; exit 2 ;;
 esac
 
 exit $fail
