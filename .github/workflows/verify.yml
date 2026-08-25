@@ -34,6 +34,14 @@ jobs:
       - name: Check pos-migration genesis
         run: ./scripts/check_pos_migration.sh all
 
+  deposit-contract:
+    name: deposit contract is deployed and ids match
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check deposit contract
+        run: ./scripts/check_deposit_contract.sh all
+
   lint:
     name: configs parse
     runs-on: ubuntu-latest

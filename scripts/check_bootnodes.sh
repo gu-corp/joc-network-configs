@@ -18,6 +18,12 @@ check() {
   local file="$ROOT/$net/metadata/enodes.yaml"
   echo "== $net =="
 
+  # A network may not publish bootnodes yet; that is not a failure.
+  if [ ! -f "$file" ]; then
+    printf '  %-22s %s\n' "skipped" "no metadata/enodes.yaml (no bootnodes published)"
+    return 0
+  fi
+
   local seen=""
   local count=0
   while IFS= read -r enode; do
@@ -44,9 +50,9 @@ check() {
 }
 
 case "$TARGET" in
-  all) check joc; echo; check joct ;;
-  joc|joct) check "$TARGET" ;;
-  *) echo "usage: $0 [joc|joct|all]" >&2; exit 2 ;;
+  all) check joc; echo; check joct; echo; check sandbox1 ;;
+  joc|joct|sandbox1) check "$TARGET" ;;
+  *) echo "usage: $0 [joc|joct|sandbox1|all]" >&2; exit 2 ;;
 esac
 
 exit $fail

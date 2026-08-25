@@ -1,0 +1,68 @@
+# sandbox1 (G.U. Sandbox Chain) — execution-layer genesis, as produced by ./genesis.json
+# Verified against https://rpc-1.sandbox1.japanopenchain.org:8545
+# (eth_getBlockByNumber 0x0) on 2026-08-25.
+# Reproduce with ../../scripts/verify_genesis.sh sandbox1
+
+chain_id: 1337
+network_id: 1456260212  # NOTE: intentionally differs from chain_id; geth needs --networkid 1456260212
+consensus: clique
+
+genesis_hash: 0xb9f3edbea733300355a191e5f7fa9e39603abddd8a31bc63d6bbb1987d36ca3f
+genesis_state_root: 0xc821f27902b258391f993d2953ab4956fb51ff3ba3be06e7a49f27611512a39e
+genesis_parent_hash: 0x0000000000000000000000000000000000000000000000000000000000000000
+
+genesis_time: 1543235253  # 2018-11-26T12:27:33Z — same genesis timestamp as joc and joct
+gas_limit: 470000000      # 0x1c03a180
+difficulty: 1
+nonce: 0x0000000000000000
+mix_hash: 0x0000000000000000000000000000000000000000000000000000000000000000
+coinbase: 0x0000000000000000000000000000000000000000
+
+clique:
+  period: 5      # measured: 5.003s average over blocks 1..31380175
+  epoch: 30000   # INFERRED — see provenance below
+  # Initial signer set, encoded in genesis extraData
+  genesis_signers:
+    - 0xba82df33044b90a6d76591aef9fb4870d6b53c20
+
+# Fork activation blocks
+forks:
+  homestead: 0          # INFERRED
+  eip150: 0             # INFERRED
+  eip155: 0             # INFERRED
+  eip158: 0             # INFERRED
+  byzantium: 0          # INFERRED
+  constantinople: 0     # INFERRED
+  petersburg: 0         # INFERRED
+  istanbul: 0           # INFERRED
+  muir_glacier: 0       # INFERRED
+  berlin: 17553835      # INFERRED — set equal to london, as on joc and joct
+  london: 17553835      # MEASURED — first block carrying baseFeePerGas
+                        # block 17553834 has none; 17553835 has 0x3b9aca00
+
+# Genesis allocation
+alloc_summary:
+  precompile_placeholders: 256          # 0x00..0x00 through 0x00..0xff, 1 wei each
+  funded:
+    - address: 0x131b395794e487b564fd86f5872727fc44544d23
+      balance_wei: 1000000000000000000000000000  # 1,000,000,000 GTH
+
+# Provenance
+# ---------------------------------------------------------------
+# Unlike joc and joct, no official genesis.json for sandbox1 was available, so
+# this one is reconstructed:
+#
+#   * Every header field is copied verbatim from the live block 0.
+#   * The 256 placeholder accounts were each confirmed at 1 wei via
+#     eth_getBalance at block 0 (and 0x01_00 confirmed absent).
+#   * The funded account was traced from the chain's earliest transfers and
+#     confirmed to hold exactly 1e27 wei at block 0.
+#
+# `geth init` reproducing genesis_hash proves the allocation and every header
+# field are exactly right — the state root commits to the full allocation. CI
+# runs that check, so this file is not taken on trust.
+#
+# What the genesis hash does NOT cover is the `config` block: fork activation
+# blocks and clique.epoch do not enter the hash. Entries marked INFERRED above
+# follow the convention joc and joct use and are NOT verified. Replace them from
+# the authoritative genesis.json when it is available.
