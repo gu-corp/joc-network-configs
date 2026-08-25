@@ -21,6 +21,14 @@ yaml_get() {
   sed -n "s/^$2:[[:space:]]*\([^[:space:]#]*\).*$/\1/p" "$1" | head -n1
 }
 
+# Run `geth init` on a genesis file in a throwaway container. Extra args are
+# global geth flags and must precede the subcommand.
+geth_init() {
+  local genesis="$1"; shift
+  docker run --rm -v "$genesis:/genesis.json:ro" \
+    "$GETH_IMAGE" "$@" init --datadir /tmp/d /genesis.json 2>&1 || true
+}
+
 rpc_call() {
   curl -sS -m 20 -X POST -H 'Content-Type: application/json' \
     --data "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"$2\",\"params\":$3}" "$1"
@@ -40,16 +48,37 @@ verify() {
 
   # 1. Recompute the genesis hash locally from genesis.json.
   if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
-    local out computed
-    out="$(docker run --rm -v "$meta/genesis.json:/genesis.json:ro" \
-             "$GETH_IMAGE" init --datadir /tmp/d /genesis.json 2>&1 || true)"
-    computed="$(printf '%s\n' "$out" | sed -n 's/.*hash=\([0-9a-fx]\{10,\}\).*/\1/p' | tail -n1)"
+    local out computed abbrev
+    # geth's terminal logger abbreviates hashes ("1b54bf..566733"). Its JSON log
+    # handler prints them in full, so ask for JSON first and fall back to the
+    # abbreviated form if this geth build has no --log.format.
+    out="$(geth_init "$meta/genesis.json" --log.format json)"
+    computed="$(printf '%s\n' "$out" | grep -oiE '0x[0-9a-f]{64}' | tail -n1 | tr 'A-F' 'a-f')"
     if [ -z "$computed" ]; then
-      bad "geth init produced no genesis hash; output was:"; printf '%s\n' "$out" | tail -n5
-    elif [ "$computed" = "${expected_hash:0:${#computed}}" ]; then
-      ok "geth init reproduces $computed"
+      out="$(geth_init "$meta/genesis.json")"
+      computed="$(printf '%s\n' "$out" | grep -oiE '0x[0-9a-f]{64}' | tail -n1 | tr 'A-F' 'a-f')"
+    fi
+
+    if [ -n "$computed" ]; then
+      if [ "$computed" = "$expected_hash" ]; then
+        ok "geth init reproduces $computed"
+      else
+        bad "geth init gave $computed, genesis_details.yaml says $expected_hash"
+      fi
     else
-      bad "geth init gave $computed, genesis_details.yaml says $expected_hash"
+      # Fallback: geth prints the first and last 3 bytes either side of "..".
+      abbrev="$(printf '%s\n' "$out" \
+                | sed -n 's/.*hash=\([0-9a-f]\{6\}\)\.\.\([0-9a-f]\{6\}\).*/\1 \2/p' | tail -n1)"
+      if [ -z "$abbrev" ]; then
+        bad "geth init produced no genesis hash; output was:"; printf '%s\n' "$out" | tail -n5
+      else
+        local got_head="${abbrev%% *}" got_tail="${abbrev##* }" want="${expected_hash#0x}"
+        if [ "$got_head" = "${want:0:6}" ] && [ "$got_tail" = "${want: -6}" ]; then
+          ok "geth init reproduces ${got_head}..${got_tail} (abbreviated by geth; matches $expected_hash)"
+        else
+          bad "geth init gave ${got_head}..${got_tail}, genesis_details.yaml says $expected_hash"
+        fi
+      fi
     fi
   else
     note "skipped" "docker unavailable — cannot recompute genesis hash locally"
