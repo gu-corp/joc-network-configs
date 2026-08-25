@@ -10,13 +10,14 @@
     "constantinopleBlock": 0,
     "petersburgBlock": 0,
     "istanbulBlock": 0,
-    "muirGlacierBlock": 0,
+    "MuirGlacierBlock": 0,
     "clique": {
       "period": 5,
       "epoch": 30000
     },
-    "londonBlock": 17553835,
-    "berlinBlock": 17553835
+    "muirGlacierBlock": 0,
+    "berlinBlock": 12842808,
+    "londonBlock": 17553835
   },
   "nonce": "0x0",
   "timestamp": "0x5bfbe6b5",
