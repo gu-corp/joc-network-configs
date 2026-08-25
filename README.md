@@ -11,28 +11,40 @@ client team needs. Everything is verified against the live networks by
 
 ## Networks
 
-| | [`joc/`](joc/) — mainnet | [`joct/`](joct/) — testnet |
-|---|---|---|
-| Token | JOC | JOCT |
-| Chain ID | `81` | `10081` |
-| Geth `--networkid` | `81` | **`361257328`** |
-| Consensus | Clique PoA, 5s blocks | Clique PoA, 5s blocks |
-| Genesis hash | `0x1b54bfa6…c566733` | `0x0fb7b477…17df1d06` |
-| Explorer | [explorer.japanopenchain.org](https://explorer.japanopenchain.org) | [explorer.testnet.japanopenchain.org](https://explorer.testnet.japanopenchain.org) |
+| | [`joc/`](joc/) | [`joct/`](joct/) | [`sandbox1/`](sandbox1/) |
+|---|---|---|---|
+| Type | mainnet | testnet | devnet |
+| Token | JOC | JOCT | SBX1 |
+| Chain ID | `81` | `10081` | `1337` |
+| Geth `--networkid` | `81` | **`361257328`** | **`1456260212`** |
+| Consensus | Clique PoA, 5s blocks | Clique PoA, 5s blocks | Clique PoA, 5s blocks |
+| Genesis hash | `0x1b54bfa6…c566733` | `0x0fb7b477…17df1d06` | `0xb9f3edbe…7d36ca3f` |
+| Beacon chain | draft only | draft only | configured, not yet at genesis |
+| Explorer | [explorer.japanopenchain.org](https://explorer.japanopenchain.org) | [explorer.testnet…](https://explorer.testnet.japanopenchain.org) | [rpc-1.sandbox1…](https://rpc-1.sandbox1.japanopenchain.org) |
 
-> On testnet the p2p network id is **not** the chain id. Geth must be started
-> with `--networkid 361257328` or it will not find peers.
+> On joct and sandbox1 the p2p network id is **not** the chain id. Geth must be
+> started with `--networkid 361257328` / `--networkid 1456260212` respectively,
+> or the node will not find peers.
+
+> sandbox1 uses chain ID `1337`, which is also the default for Ganache, Hardhat
+> and Anvil. Local dev tooling can collide with it.
+
+Networks sit at the top level, one directory each — the tier is a property in
+this table, not a directory level, so `<network>/metadata/<file>` is a uniform
+path for every network.
 
 ## Layout
 
 ```
-joc/                            joct/
-  README.md                       README.md          genesis information
-  metadata/                       metadata/
-    genesis.json                    genesis.json     execution-layer genesis
-    genesis_details.yaml            …                genesis hash, clique params, fork blocks
-    enodes.yaml                     …                execution-layer bootnodes
-    chain.json                      …                EIP-155 chain metadata
+joc/  joct/  sandbox1/       one directory per network
+  README.md                  genesis information
+  metadata/
+    genesis.json             execution-layer genesis
+    genesis_details.yaml     genesis hash, clique params, fork blocks
+    enodes.yaml              execution-layer bootnodes (not on sandbox1 yet)
+    chain.json               EIP-155 chain metadata
+    config.yaml              beacon chain config (sandbox1 only)
+    deposit_contract.txt     deposit contract address (sandbox1 only)
 
 pos-migration/                  config for the planned PoA -> PoS migration
   joc/                          DRAFT — nothing here is active
@@ -46,6 +58,7 @@ scripts/
   verify_genesis.sh             genesis.json vs. genesis_details.yaml vs. live RPC
   check_bootnodes.sh            enode syntax, duplicates, reachability
   check_pos_migration.sh        PoS draft genesis vs. the live genesis
+  check_deposit_contract.sh     deposit contract deployed; ids match the node
 ```
 
 `joc/` and `joct/` contain only what the live networks are actually running, and
@@ -83,6 +96,7 @@ Docker setup see [`gu-corp/joc-node-quickstart`](https://github.com/gu-corp/joc-
 ./scripts/verify_genesis.sh       # needs docker + jq; recomputes the genesis hash
 ./scripts/check_bootnodes.sh      # needs nc
 ./scripts/check_pos_migration.sh  # needs python3
+./scripts/check_deposit_contract.sh
 ```
 
 `verify_genesis.sh` runs `geth init` on the checked-in `genesis.json`, compares
