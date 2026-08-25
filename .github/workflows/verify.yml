@@ -26,6 +26,14 @@ jobs:
       - name: Check enodes
         run: ./scripts/check_bootnodes.sh all
 
+  pos-migration:
+    name: PoS draft has not drifted from the live genesis
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check pos-migration genesis
+        run: ./scripts/check_pos_migration.sh all
+
   lint:
     name: configs parse
     runs-on: ubuntu-latest

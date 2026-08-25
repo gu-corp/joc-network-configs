@@ -34,14 +34,18 @@ joc/                            joct/
     enodes.yaml                     …                execution-layer bootnodes
     chain.json                      …                EIP-155 chain metadata
 
-pos-migration/                  beacon chain config for the planned PoA -> PoS
-  joc/config.yaml               migration — DRAFT, nothing here is active
-  joct/config.yaml
+pos-migration/                  config for the planned PoA -> PoS migration
+  joc/                          DRAFT — nothing here is active
+    config.yaml                 beacon chain config
+    genesis.json                execution genesis + merge fields
+    deposit_contract_block.txt
+  joct/                         same
   presets.md
 
 scripts/
   verify_genesis.sh             genesis.json vs. genesis_details.yaml vs. live RPC
   check_bootnodes.sh            enode syntax, duplicates, reachability
+  check_pos_migration.sh        PoS draft genesis vs. the live genesis
 ```
 
 `joc/` and `joct/` contain only what the live networks are actually running, and
@@ -76,8 +80,9 @@ Docker setup see [`gu-corp/joc-node-quickstart`](https://github.com/gu-corp/joc-
 ## Verifying
 
 ```bash
-./scripts/verify_genesis.sh      # needs docker + jq; recomputes the genesis hash
-./scripts/check_bootnodes.sh     # needs nc
+./scripts/verify_genesis.sh       # needs docker + jq; recomputes the genesis hash
+./scripts/check_bootnodes.sh      # needs nc
+./scripts/check_pos_migration.sh  # needs python3
 ```
 
 `verify_genesis.sh` runs `geth init` on the checked-in `genesis.json`, compares
@@ -95,7 +100,11 @@ still open and no production node should use it.**
 It sits outside the per-network directories on purpose: in the eth-clients
 layout, `metadata/config.yaml` is the *live* beacon config, so a draft in that
 slot would be read as authoritative. When the migration parameters are final,
-each file moves to `<network>/metadata/config.yaml`.
+each file moves into `<network>/metadata/`.
+
+The merge does not change the genesis block, so `pos-migration/<net>/genesis.json`
+is the live genesis plus five fork-activation fields and nothing else —
+`check_pos_migration.sh` fails the build if that stops being true.
 
 ## Contributing
 
