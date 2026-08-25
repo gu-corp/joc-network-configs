@@ -1,13 +1,13 @@
 {
-  "name": "G.U. Sandbox Chain (sandbox1)",
-  "chain": "GTH",
+  "name": "Sandbox1",
+  "chain": "SBX1",
   "chainId": 1337,
   "networkId": 1337,
   "shortName": "sandbox1",
   "slip44": 1,
   "nativeCurrency": {
-    "name": "GEther",
-    "symbol": "GTH",
+    "name": "Sandbox1 Token",
+    "symbol": "SBX1",
     "decimals": 18
   },
   "rpc": [

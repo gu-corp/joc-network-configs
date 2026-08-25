@@ -14,7 +14,7 @@ client team needs. Everything is verified against the live networks by
 | | [`joc/`](joc/) | [`joct/`](joct/) | [`sandbox1/`](sandbox1/) |
 |---|---|---|---|
 | Type | mainnet | testnet | devnet |
-| Token | JOC | JOCT | GTH |
+| Token | JOC | JOCT | SBX1 |
 | Chain ID | `81` | `10081` | `1337` |
 | Geth `--networkid` | `81` | **`361257328`** | **`1456260212`** |
 | Consensus | Clique PoA, 5s blocks | Clique PoA, 5s blocks | Clique PoA, 5s blocks |

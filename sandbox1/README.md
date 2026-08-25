@@ -1,6 +1,6 @@
 # sandbox1 metadata
 
-G.U. Sandbox Chain — the development network. Chain ID `1337`, Clique
+Sandbox1 — the development network. Chain ID `1337`, Clique
 proof-of-authority, 5-second blocks. This is where the PoA → PoS migration is
 being rehearsed: unlike joc and joct, sandbox1 has a deployed deposit contract
 and a real consensus-layer config.
@@ -41,32 +41,33 @@ clique:
   epoch: 30000                # inferred, see below
   genesis_signers:
     - 0xba82df33044b90a6d76591aef9fb4870d6b53c20
-berlin_block: 17553835        # inferred, see below
-london_block: 17553835        # measured — first block carrying baseFeePerGas
+berlin_block: 12842808        # note: NOT the same block as london
+london_block: 17553835
 ```
 
 ## How much of this is verified
 
-No official `genesis.json` for sandbox1 was available, so
-[`metadata/genesis.json`](metadata/genesis.json) is reconstructed. Every header
-field is copied verbatim from the live block 0; the 256 placeholder accounts
-were each confirmed at 1 wei via `eth_getBalance` at block 0; the funded account
-was traced from the chain's earliest transfers.
+The header fields and the allocation in
+[`metadata/genesis.json`](metadata/genesis.json) were reconstructed from the
+live chain before an official file was available, and are now proven: CI runs
+`geth init` on the file and it reproduces the genesis hash above. Because the
+state root commits to the whole allocation, that check being green **proves the
+allocation and every header field are exactly right**.
 
-CI runs `geth init` on the file and compares the result with the genesis hash
-above. Because the state root commits to the whole allocation, that check being
-green **proves the allocation and every header field are exactly right**.
+The `config` block does not enter the genesis hash and so could not be proven
+the same way; it comes from the authoritative sandbox1 genesis file.
 
-What the genesis hash does *not* cover is the `config` block. `berlin_block`,
-`clique.epoch` and the pre-London fork blocks are marked `INFERRED` in
-[`metadata/genesis_details.yaml`](metadata/genesis_details.yaml) — they follow
-the convention joc and joct use and should be replaced from the authoritative
-genesis file when it is available.
+That distinction is not academic here. `berlinBlock` is **12842808, not the same
+block as `londonBlock`** — joc and joct activate the two together, and following
+that convention produced a wrong value that every check still passed. Anything
+in `config` has to come from the source of truth, never from a pattern.
 
-Two more things are unverified: **no bootnodes are published** (there is no
-`metadata/enodes.yaml`), and the native currency name in
-[`metadata/chain.json`](metadata/chain.json) comes from
-`gu-corp/gu-sandbox-chain-docs`, which also lists a stale chain ID of 99999.
+`metadata/genesis.json` carries both `MuirGlacierBlock` and `muirGlacierBlock`,
+as the official file does. Go's JSON decoding is case-insensitive, so the two
+map to the same field and the duplicate is harmless; it is kept for fidelity.
+
+One thing remains unverified: **no bootnodes are published**, so there is no
+`metadata/enodes.yaml`.
 
 ## Files
 

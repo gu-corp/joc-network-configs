@@ -51,8 +51,12 @@ live genesis plus exactly five merge keys (`terminalTotalDifficulty`,
 
 **The genesis hash does not cover `config`.** It commits to the allocation and
 the header fields only. Fork blocks and `clique.epoch` can be wrong and every
-check will still pass. Values that were not verified are marked `INFERRED` in
-`genesis_details.yaml` — do not silently promote them.
+check will still pass. This has already happened once: sandbox1's `berlinBlock`
+was inferred to equal `londonBlock`, as it does on joc and joct, and CI stayed
+green until the authoritative file showed it is actually 12842808. Take `config`
+from the source of truth; never from the pattern the other networks follow. Mark
+anything unverified `INFERRED` in `genesis_details.yaml` and do not silently
+promote it.
 
 **`networkId` is not `chainId` on two of the three networks.** joct is chain
 `10081` / network `361257328`; sandbox1 is chain `1337` / network `1456260212`.
@@ -104,10 +108,7 @@ sandbox1 entry in `gu-sandbox-chain-docs` and `gu-ethereum-sdk` lists chain ID
 
 ## Known gaps
 
-- sandbox1 publishes no bootnodes, and its `berlinBlock`, `clique.epoch` and
-  pre-London fork blocks are `INFERRED`.
-- sandbox1's native currency name comes from `gu-sandbox-chain-docs`, which is
-  stale in other respects.
+- sandbox1 publishes no bootnodes, so it has no `enodes.yaml`.
 - No `chainspec.json` / `besu.json` (eth-clients ships both). Generating them
   means converting the clique config to another format; only add them if they
   can be verified by running Nethermind/Besu, the way geth verifies the rest.
